@@ -1,19 +1,15 @@
-import org.springframework.boot.gradle.tasks.bundling.BootJar
-
 plugins {
     `java-gradle-plugin`
     `maven-publish`
-    id("org.springdoc.openapi-gradle-plugin") version "1.8.0"
-    id("org.openapi.generator") version "7.2.0"
-    id("com.gradle.plugin-publish") version "1.2.1"
-//    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("com.gradle.plugin-publish") version "1.2.0"
+    kotlin("jvm") version "1.8.20"
 }
 
 group = "ru.aedilay"
 
 repositories {
-    mavenCentral()
     gradlePluginPortal()
+    mavenCentral()
 }
 
 dependencies {
@@ -25,28 +21,27 @@ gradlePlugin {
     website = "https://github.com/Aedilay/client-generator-gradle-plugin"
     vcsUrl = "https://github.com/Aedilay/client-generator-gradle-plugin.git"
     plugins {
-        create("client-generator") {
+        create("ClientGenerator") {
             id = "ru.aedilay.client-generator"
             version = "1.0.0"
             displayName = "spring client generator"
-            description = "Learning project for geting in touch with creating custom gradle plugins. This plugin is for generating feign client for service controllers"
+            description =
+                "Learning project for geting in touch with creating custom gradle plugins. This plugin is for generating feign client for service controllers"
             tags = listOf("demo")
             implementationClass = "ru.aedilay.ClientGeneratorPlugin"
         }
     }
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("myLibrary") {
-            from(components["java"])
-            groupId = "ru.aedilay"
-            artifactId = "client-generator"
-            version = "1.0.0"
-        }
-    }
+val jvmVersion: JavaLanguageVersion = JavaLanguageVersion.of(17)
+
+java {
+    toolchain.languageVersion.set(jvmVersion)
+    withSourcesJar()
 }
 
-project.tasks.withType<BootJar> {
-    enabled = false
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = "$jvmVersion"
+    }
 }

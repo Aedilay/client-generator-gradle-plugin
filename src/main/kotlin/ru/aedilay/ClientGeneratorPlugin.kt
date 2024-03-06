@@ -4,7 +4,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.GradleBuild
-import org.gradle.kotlin.dsl.getByType
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 import org.springdoc.openapi.gradle.plugin.OpenApiExtension
 
@@ -34,33 +33,33 @@ class ClientGeneratorPlugin : Plugin<Project> {
         val generatedClientName = "${extension.clientJarPrefix.get()}-client-$branchName.jar"
         val newClientUrlBlock = "url: http://${extension.clientDefaultUri.get()}:8080"
 
-        val openApiExtension = project.extensions.getByType<OpenApiExtension>()
+        val openApiExtension = project.extensions.getByType(OpenApiExtension::class.java)
 
         with(openApiExtension) {
             apiDocsUrl.set(DEFAULT_OPENAPI_SPEC_URL)
             outputDir.set(specDirectory)
             outputFileName.set(SPEC_FILE_NAME)
             customBootRun {
-                args.set(mutableListOf("--spring.profiles.active=build-client", "--logging.level.root=OFF"))
+                it.args.set(mutableListOf("--spring.profiles.active=build-client", "--logging.level.root=OFF"))
             }
         }
 
         val buildClient = project.tasks.register("jarClient", GradleBuild::class.java) {
-            setDir(generatedClientDirectory.get().toString())
-            tasks = mutableListOf("clean", "jar")
+            it.setDir(generatedClientDirectory.get().toString())
+            it.tasks = mutableListOf("clean", "jar")
         }
 
         val copyClientToMainBuild = project.tasks.register("copyClientToMainBuild", Copy::class.java) {
-            dependsOn(buildClient)
-            from("${generatedClientDirectory.get()}/build/libs") {
-                include(DEFAULT_GENERATOR_JAR)
+            it.dependsOn(buildClient)
+            it.from("${generatedClientDirectory.get()}/build/libs") {
+                it.include(DEFAULT_GENERATOR_JAR)
             }
-            into("${project.layout.buildDirectory.get()}/libs")
-            rename(DEFAULT_GENERATOR_JAR, generatedClientName)
+            it.into("${project.layout.buildDirectory.get()}/libs")
+            it.rename(DEFAULT_GENERATOR_JAR, generatedClientName)
         }
 
         val generateClient = project.tasks.register("generateClient", GenerateTask::class.java) {
-            doFirst {
+            it.doFirst {
                 val file = specDirectory.get().file(SPEC_FILE_NAME).asFile
                 val text = file.readText()
                 val modifiedText = text.replace(
@@ -69,14 +68,14 @@ class ClientGeneratorPlugin : Plugin<Project> {
                 )
                 file.writeText(modifiedText)
             }
-            inputSpec.set(specDirectory.get().file(SPEC_FILE_NAME).asFile.absolutePath)
-            outputDir.set(generatedClientDirectory.get().asFile.absolutePath)
-            packageName.set(extension.packageName.get())
-            modelPackage.set("${extension.packageName.get()}.model")
-            apiPackage.set("${extension.packageName.get()}.api")
-            packageName.set(extension.packageName.get())
-            generatorName.set(GENERATOR_TYPE)
-            configOptions.set(
+            it.inputSpec.set(specDirectory.get().file(SPEC_FILE_NAME).asFile.absolutePath)
+            it.outputDir.set(generatedClientDirectory.get().asFile.absolutePath)
+            it.packageName.set(extension.packageName.get())
+            it.modelPackage.set("${extension.packageName.get()}.model")
+            it.apiPackage.set("${extension.packageName.get()}.api")
+            it.packageName.set(extension.packageName.get())
+            it.generatorName.set(GENERATOR_TYPE)
+            it.configOptions.set(
                 mapOf(
                     "interfaceOnly" to "true",
                     "library" to "spring-cloud",
@@ -87,19 +86,19 @@ class ClientGeneratorPlugin : Plugin<Project> {
                     "useTags" to "true"
                 )
             )
-            finalizedBy(buildClient, copyClientToMainBuild)
+            it.finalizedBy(buildClient, copyClientToMainBuild)
         }
 
         project.tasks.named("build") {
-            finalizedBy("generateOpenApiDocs")
+            it.finalizedBy("generateOpenApiDocs")
         }
 
         project.tasks.named("generateOpenApiDocs") {
-            finalizedBy(generateClient)
+            it.finalizedBy(generateClient)
         }
 
         project.tasks.named("forkedSpringBootRun") {
-            dependsOn(
+            it.dependsOn(
                 project.tasks.named("jar"),
                 project.tasks.named("bootJar"),
                 project.tasks.named("test")
