@@ -11,10 +11,14 @@ open class ClientGeneratorExtension @Inject constructor(
 ) {
     val clientDefaultUri: Property<String> = objects.property(String::class.java)
     val clientJarPrefix: Property<String> = objects.property(String::class.java)
+    val packageName: Property<String> = objects.property(String::class.java)
+    val force: Property<Boolean> = objects.property(Boolean::class.java)
 
     init {
         clientDefaultUri.convention(project.name)
         clientJarPrefix.convention(project.name)
+        packageName.convention(project.name.replace('-', '.'))
+        force.convention(false)
     }
 }
 

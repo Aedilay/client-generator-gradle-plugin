@@ -4,6 +4,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.GradleBuild
+import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.getByType
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 import org.springdoc.openapi.gradle.plugin.OpenApiExtension
@@ -14,27 +15,30 @@ class ClientGeneratorPlugin : Plugin<Project> {
         with(project) {
             plugins.apply(SPRINGDOC_PLUGIN)
             extensions.create(EXTENSION_NAME, ClientGeneratorExtension::class.java)
-            generateClient(this)
+            afterEvaluate {
+                generateClient(this)
+            }
         }
     }
 
-    private fun generateClient(project: Project) {
-        if (!STAND_BRANCHES.contains(System.getenv("BRANCH_NAME"))) {
-            return
-        }
-
+    fun generateClient(project: Project) {
         val extension: ClientGeneratorExtension =
             project.extensions.getByName(EXTENSION_NAME) as ClientGeneratorExtension
+
+        if (!STAND_BRANCHES.contains(System.getenv("BRANCH_NAME")) && !extension.force.get()) {
+            return
+        }
 
         val specDirectory = project.layout.buildDirectory.dir("docs")
         val generatedClientDirectory = project.layout.buildDirectory.dir("generated")
         val branchName = System.getenv("BRANCH_NAME") ?: DEFAULT_BRANCH
-        val generatedClientName = "${extension.clientJarPrefix}-client-$branchName.jar"
-        val defaultClientUrl = "url: http://${extension.clientDefaultUri}:8080"
+        val generatedClientName = "${extension.clientJarPrefix.get()}-client-$branchName.jar"
+        val newClientUrlBlock = "url: http://${extension.clientDefaultUri.get()}:8080"
 
         val openApiExtension = project.extensions.getByType<OpenApiExtension>()
 
         with(openApiExtension) {
+            apiDocsUrl.set(DEFAULT_OPENAPI_SPEC_URL)
             outputDir.set(specDirectory)
             outputFileName.set(SPEC_FILE_NAME)
             customBootRun {
@@ -50,10 +54,10 @@ class ClientGeneratorPlugin : Plugin<Project> {
         val copyClientToMainBuild = project.tasks.register("copyClientToMainBuild", Copy::class.java) {
             dependsOn(buildClient)
             from("${generatedClientDirectory.get()}/build/libs") {
-                include("*.jar")
+                include(DEFAULT_GENERATOR_JAR)
             }
             into("${project.layout.buildDirectory.get()}/libs")
-            rename("openapi-spring-1.0.0-plain.jar", generatedClientName)
+            rename(DEFAULT_GENERATOR_JAR, generatedClientName)
         }
 
         val generateClient = project.tasks.register("generateClient", GenerateTask::class.java) {
@@ -61,14 +65,18 @@ class ClientGeneratorPlugin : Plugin<Project> {
                 val file = specDirectory.get().file(SPEC_FILE_NAME).asFile
                 val text = file.readText()
                 val modifiedText = text.replace(
-                    "url: http://localhost:8080",
-                    defaultClientUrl
+                    DEFAULT_OPENAPI_URL_BOCK,
+                    newClientUrlBlock
                 )
                 file.writeText(modifiedText)
             }
             inputSpec.set(specDirectory.get().file(SPEC_FILE_NAME).asFile.absolutePath)
             outputDir.set(generatedClientDirectory.get().asFile.absolutePath)
-            generatorName.set("kotlin-spring")
+            packageName.set(extension.packageName.get())
+            modelPackage.set("${extension.packageName.get()}.model")
+            apiPackage.set("${extension.packageName.get()}.api")
+            packageName.set(extension.packageName.get())
+            generatorName.set(GENERATOR_TYPE)
             configOptions.set(
                 mapOf(
                     "interfaceOnly" to "true",
