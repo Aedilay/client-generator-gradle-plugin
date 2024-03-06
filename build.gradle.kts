@@ -25,7 +25,7 @@ gradlePlugin {
     plugins {
         create("generate-client") {
             id = "client-generator"
-            version = "1.0.2"
+            version = "1.0.0"
             implementationClass = "ru.ventra.ClientGeneratorPlugin"
         }
     }
