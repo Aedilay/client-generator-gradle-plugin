@@ -1,7 +1,6 @@
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
-    `kotlin-dsl`
     `java-gradle-plugin`
     `maven-publish`
     id("org.springdoc.openapi-gradle-plugin") version "1.8.0"
@@ -10,7 +9,7 @@ plugins {
 //    id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
-group = "ru.ventra"
+group = "ru.aedilay"
 
 repositories {
     mavenCentral()
@@ -26,13 +25,24 @@ gradlePlugin {
     website = "https://github.com/Aedilay/client-generator-gradle-plugin"
     vcsUrl = "https://github.com/Aedilay/client-generator-gradle-plugin.git"
     plugins {
-        create("generate-client") {
+        create("client-generator") {
             id = "ru.aedilay.client-generator"
             version = "1.0.0"
             displayName = "spring client generator"
-            description = "plugin for generating feign client for service controllers"
+            description = "Learning project for geting in touch with creating custom gradle plugins. This plugin is for generating feign client for service controllers"
             tags = listOf("demo")
             implementationClass = "ru.aedilay.ClientGeneratorPlugin"
+        }
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("myLibrary") {
+            from(components["java"])
+            groupId = "ru.aedilay"
+            artifactId = "client-generator"
+            version = "1.0.0"
         }
     }
 }
