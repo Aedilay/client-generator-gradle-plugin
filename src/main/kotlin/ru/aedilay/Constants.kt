@@ -1,4 +1,4 @@
-package ru.ventra
+package ru.aedilay
 
 val STAND_BRANCHES = listOf("develop", "qa", "qa2", "stage", "master")
 const val SPEC_FILE_NAME = "openapi.yaml"

@@ -1,1 +1,1 @@
-rootProject.name = "client-build-gradle-plugin"
+rootProject.name = "client-generator-gradle-plugin"

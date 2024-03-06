@@ -1,10 +1,9 @@
-package ru.ventra
+package ru.aedilay
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.GradleBuild
-import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.getByType
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 import org.springdoc.openapi.gradle.plugin.OpenApiExtension
